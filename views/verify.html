@@ -1,0 +1,61 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Verify</title>
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    html, body { height: 100%; width: 100%; }
+    body {
+      background: #1a1a1a;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      overflow-x: hidden;
+    }
+    .container {
+      position: relative;
+      width: 100%;
+      max-width: 1600px;
+      padding: 0 20px;
+    }
+    .container img {
+      display: block;
+      width: 100%;
+      height: auto;
+      border-radius: 4px;
+    }
+    .btn-overlay {
+      position: absolute;
+      top: 62%;
+      left: 50%;
+      transform: translateX(-50%);
+      width: 22%;
+      height: 8%;
+      border-radius: 999px;
+      cursor: pointer;
+    }
+
+    /* Tablet */
+    @media (max-width: 1024px) {
+      .container { padding: 0 12px; }
+    }
+
+    /* Phone */
+    @media (max-width: 600px) {
+      .container { padding: 0; }
+      .btn-overlay {
+        width: 28%;
+        height: 9%;
+      }
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <img src="/verify-page.png" alt="">
+    <a href="{{AUTH_URL}}" class="btn-overlay"></a>
+  </div>
+</body>
+</html>
